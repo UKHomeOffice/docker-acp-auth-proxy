@@ -24,7 +24,7 @@ steps:
     repo: quay.io/ukhomeofficedigital/acp-auth-proxy
     tags: ${DRONE_TAG}
   environment:
-    DOCKER_USERNAME: ukhomeofficedigital+acp-auth-proxy
+    DOCKER_USERNAME: ukhomeofficedigital+authproxy
     DOCKER_PASSWORD:
       from_secret: DOCKER_PASSWORD
   when:
