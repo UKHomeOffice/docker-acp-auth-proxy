@@ -12,10 +12,41 @@ steps:
   image: 340268328991.dkr.ecr.eu-west-2.amazonaws.com/acp/dind
   commands:
   # wait for docker service to be up before running docker build
-  - n=0; while [ "$n" -lt 60 ] && [ ! -e /var/run/docker.sock ]; do n=$(( n + 1 )); sleep 1; done
-  - docker build -t quay.io/ukhomeofficedigital/acp-auth-proxy:$${DRONE_COMMIT_SHA} .
+  - n=0; while [ "$n" -lt 60 ] && [ ! "$(docker stats --no-stream)" ]; do n=$(( n + 1 )); sleep 1; done
+  - docker build -t acp-auth-proxy:$${DRONE_COMMIT_SHA} .
   when:
-    event: push
+    event:
+    - push
+
+- name: scan-image
+  image: 340268328991.dkr.ecr.eu-west-2.amazonaws.com/acp/anchore-submission
+  environment:
+    IMAGE_NAME: acp-auth-proxy:${DRONE_COMMIT_SHA}
+    WHITELIST: CVE-2021-22555 # remove once there is an update for linux-libc-dev that fixes this CVE
+  when:
+    event:
+    - push
+    branch:
+      exclude:
+      - master
+
+- name: publish-latest
+  image: plugins/docker
+  settings:
+    registry: quay.io
+    repo: quay.io/ukhomeofficedigital/acp-auth-proxy
+    tags:
+      - latest
+      - ${DRONE_COMMIT_SHA}
+  environment:
+    DOCKER_USERNAME: ukhomeofficedigital+authproxy
+    DOCKER_PASSWORD:
+      from_secret: DOCKER_PASSWORD
+  when:
+    branch:
+    - master
+    event:
+    - push
 
 - name: publish-tag
   image: plugins/docker
@@ -24,7 +55,7 @@ steps:
     repo: quay.io/ukhomeofficedigital/acp-auth-proxy
     tags: ${DRONE_TAG}
   environment:
-    DOCKER_USERNAME: ukhomeofficedigital+acp-auth-proxy
+    DOCKER_USERNAME: ukhomeofficedigital+authproxy
     DOCKER_PASSWORD:
       from_secret: DOCKER_PASSWORD
   when:
@@ -34,3 +65,17 @@ steps:
 services:
 - name: docker
   image: 340268328991.dkr.ecr.eu-west-2.amazonaws.com/acp/dind
+  when:
+    event:
+    - push
+
+- name: anchore-submission-server
+  image: 340268328991.dkr.ecr.eu-west-2.amazonaws.com/acp/anchore-submission:latest
+  commands:
+   - /run.sh server
+  when:
+    event:
+    - push
+    branch:
+      exclude:
+      - master
