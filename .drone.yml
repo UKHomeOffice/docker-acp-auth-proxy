@@ -12,7 +12,7 @@ steps:
   image: 340268328991.dkr.ecr.eu-west-2.amazonaws.com/acp/dind
   commands:
   # wait for docker service to be up before running docker build
-  - n=0; while [ "$n" -lt 60 ] && [ ! -e /var/run/docker.sock ]; do n=$(( n + 1 )); sleep 1; done
+  - n=0; while [ "$n" -lt 60 ] && [ ! "$(docker stats --no-stream)" ]; do n=$(( n + 1 )); sleep 1; done
   - docker build -t quay.io/ukhomeofficedigital/acp-auth-proxy:$${DRONE_COMMIT_SHA} .
   when:
     event: push
@@ -24,7 +24,7 @@ steps:
     repo: quay.io/ukhomeofficedigital/acp-auth-proxy
     tags: ${DRONE_TAG}
   environment:
-    DOCKER_USERNAME: ukhomeofficedigital+acp-auth-proxy
+    DOCKER_USERNAME: ukhomeofficedigital+authproxy
     DOCKER_PASSWORD:
       from_secret: DOCKER_PASSWORD
   when:
