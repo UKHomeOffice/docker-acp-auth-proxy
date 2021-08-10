@@ -1,0 +1,5 @@
+.vscode/
+# docker compose files (will not work properly on a mac due to the host network mode not working properly - https://github.com/docker/for-mac/issues/1031)
+docker-compose.yml
+.env
+compose/
