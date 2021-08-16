@@ -1,0 +1,66 @@
+version: "3.9"
+services:
+  mariadb:
+    image: mariadb:10.4.8
+    network_mode: "host"
+    # because we're using the host network, we can't remap the ports so this is just for informational purposes
+    # ports:
+    #   - "3306"
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "${MYSQL_RANDOM_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${KEYCLOAK_DATABASE}"
+      MYSQL_USER: "${KEYCLOAK_DB_USER}"
+      MYSQL_PASSWORD: "${KEYCLOAK_DB_PASSWORD}"
+
+  keycloak:
+    image: quay.io/ukhomeofficedigital/keycloak
+    network_mode: "host"
+    # because we're using the host network, we can't remap the ports so this is just for informational purposes
+    # ports:
+    #   - "8080:8080"
+    environment:
+      DB_VENDOR: "${DB_VENDOR}"
+      DB_ADDR: "${DB_ADDR}"
+      DB_DATABASE: "${KEYCLOAK_DATABASE}"
+      DB_PORT: "${DB_PORT}"
+      DB_USER: "${KEYCLOAK_DB_USER}"
+      DB_PASSWORD: "${KEYCLOAK_DB_PASSWORD}"
+      KEYCLOAK_USER: "${KEYCLOAK_USER}"
+      KEYCLOAK_PASSWORD: "${KEYCLOAK_PASSWORD}"
+    command:
+      - -b 0.0.0.0
+      - --server-config=standalone.xml
+    depends_on:
+      - mariadb
+
+  auth-proxy:
+    build: .
+    network_mode: "host"
+    # because we're using the host network, we can't remap the ports so this is just for informational purposes
+    # ports:
+    #   - "8081:8081"
+    #   - "10443:10443"
+    environment:
+      HTTP_LISTEN_PORT: ${HTTP_LISTEN_PORT}
+      KEYCLOAK_CLIENT_ID: "${KEYCLOAK_CLIENT_ID}"
+      KEYCLOAK_DISCOVERY_URL: "${KEYCLOAK_DISCOVERY_URL}"
+      KEYCLOAK_INSTANCE: "${KEYCLOAK_INSTANCE}"
+      KEYCLOAK_REALM: "${KEYCLOAK_REALM}"
+      SESSION_SECRET: "${SESSION_SECRET}"
+      UPSTREAM_URL: "${UPSTREAM_URL}"
+    volumes:
+      - ./entrypoint.sh:/entrypoint.sh
+      - ./config/lua:/usr/local/openresty/nginx/conf/lua
+      - ./config/locations:/usr/local/openresty/nginx/conf/locations
+      - ./compose/:/compose/
+    command:
+      - /compose/bootstrap.sh
+    depends_on:
+      - keycloak
+
+  httpbin:
+    image: kennethreitz/httpbin
+    network_mode: "host"
+    # because we're using the host network, we can't remap the ports so this is just for informational purposes
+    # ports:
+    #   - "80:80"
