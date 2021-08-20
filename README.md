@@ -2,30 +2,41 @@
 
 An OpenID Connect (OIDC) authentication proxy based on [Openresty](https://github.com/openresty/docker-openresty/) and using the [lua-resty-openidc](https://github.com/zmartzone/lua-resty-openidc) library.
 
-The expectation is that this will be used with [Keycloak](https://www.keycloak.org/), however this should be able to be used with any OIDC provider.
+This has been tested with [Keycloak](https://www.keycloak.org/), however this should be able to be used with any OIDC provider.
 
 ## Usage
 
 ### Quickstart
-#### Docker
-```bash
-docker run \
-  -e DISCOVERY_URL="<OpenID issuer URL>" \
-  -e CLIENT_ID="my-client" \
-  -e CLIENT_SECRET="my-secret" \
-  -e SESSION_SECRET="$(openssl rand -hex 16)" \
-  -e UPSTREAM_URL="https://google.com" \
-  quay.io/ukhomeofficedigital/acp-auth-proxy
-```
+#### Docker Compose
+
+A Docker compose configuration is included in this directory to show an example of this image in use. To use it, simply run `docker-compose up`.
+
+> Note: This configuration relies on the containers using `localhost` to communicate, so it uses the host network. Due to https://github.com/docker/for-mac/issues/1031 this means that it not work correctly on a Mac.
+
+The following containers will be started:
+
+- [Keycloak](https://hub.docker.com/r/jboss/keycloak) - The OIDC provider to be used for authentication
+- [MariaDB](https://hub.docker.com/_/mariadb) - Used as the backend database for the Keycloak server
+- [httpbin](https://hub.docker.com/r/kennethreitz/httpbin) - The upstream application behind the auth proxy
+- ACP Auth Proxy - This repo's image
+
+Once the message "starting nginx..." is shown from the auth-proxy container, then all of the containers should be up and ready to use. The Keycloak server will be running on port 8080, so you can go to the admin console by going to `localhost:8080` and login using the admin credentials ("admin" for both the username and the password).
+
+There is a [`bootstrap.sh` script](compose/bootstrap.sh) that runs in the auth proxy image before starting nginx. This script will create a new realm, client and user in Keycloak for use with the auth proxy. See [compose/auth-test-realm.json](compose/auth-test-realm.json) for the specific configuration.
+
+To use the auth proxy, go to `localhost:8081` and login using "testuser" for the username and "securepassword" for the password. You should successfully log in and be sent to httpbin, which is running on port 80. You can also logout again by going adding `/logout` to the url.
 
 #### Kubernetes
+
+Here is an example of how you can use this image in a Kubernetes cluster:
+
 ```yaml
 ...
 - name: auth-proxy
   image: quay.io/ukhomeofficedigital/acp-auth-proxy
   ports:
     - containerPort: 8080
-      name: https
+      name: http
     - containerPort: 10443
       name: https
   env:
