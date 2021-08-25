@@ -1,0 +1,65 @@
+{
+  "realm": "auth-test",
+  "displayName": "auth-test",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "httpbin-auth",
+      "name": "httpbin",
+      "description": "Used to protect the httpbin application",
+      "protocol": "openid-connect",
+      "bearerOnly": false,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "redirectUris": [
+        "http://localhost:8081",
+        "http://localhost:8081/oauth/callback",
+        "https://localhost:10443",
+        "https://localhost:10443/oauth/callback"
+      ],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "aud",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "aud",
+            "claim.value": "httpbin-auth",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "email": "testuser@example.com",
+      "enabled": true,
+      "firstName": "Test",
+      "lastName": "User",
+      "username": "testuser",
+      "credentials": [
+        {
+          "temporary": false,
+          "type": "password",
+          "value": "securepassword"
+        }
+      ],
+      "realmRoles": [
+        "offline_access",
+        "uma_authorization"
+      ],
+      "clientRoles": {
+        "account": [
+          "manage-account",
+          "view-profile"
+        ]
+      }
+    }
+  ]
+}
