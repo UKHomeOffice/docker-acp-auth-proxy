@@ -28,7 +28,7 @@ steps:
     - push
     branch:
       exclude:
-      - master
+      - main
 
 - name: publish-latest
   image: plugins/docker
@@ -44,7 +44,7 @@ steps:
       from_secret: DOCKER_PASSWORD
   when:
     branch:
-    - master
+    - main
     event:
     - push
 
@@ -78,4 +78,4 @@ services:
     - push
     branch:
       exclude:
-      - master
+      - main
