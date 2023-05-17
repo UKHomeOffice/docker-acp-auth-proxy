@@ -1,4 +1,4 @@
-FROM openresty/openresty:1.21.4.1-7-bionic
+FROM openresty/openresty:1.21.4.1-0-jammy
 
 # update all packages
 RUN apt-get update && apt-get upgrade -y
