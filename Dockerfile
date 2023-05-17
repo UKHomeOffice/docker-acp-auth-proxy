@@ -1,4 +1,4 @@
-FROM openresty/openresty:1.19.3.2-2-bionic
+FROM openresty/openresty:1.21.4.1-7-bionic
 
 # update all packages
 RUN apt-get update && apt-get upgrade -y
