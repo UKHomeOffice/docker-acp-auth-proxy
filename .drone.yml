@@ -12,7 +12,7 @@ steps:
   image: 340268328991.dkr.ecr.eu-west-2.amazonaws.com/acp/dind
   commands:
   # wait for docker service to be up before running docker build
-  - n=0; while [ "$n" -lt 60 ] && [ ! "$(docker stats --no-stream)" ]; do n=$(( n + 1 )); sleep 1; done
+  - /usr/local/bin/wait
   - docker build -t acp-auth-proxy:$${DRONE_COMMIT_SHA} .
   when:
     event:
