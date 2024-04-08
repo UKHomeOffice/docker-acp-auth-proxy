@@ -17,18 +17,22 @@ steps:
   when:
     event:
     - push
+    - pull_request
 
 - name: scan-image
-  image: 340268328991.dkr.ecr.eu-west-2.amazonaws.com/acp/anchore-submission
+  pull: Always
+  image: 340268328991.dkr.ecr.eu-west-2.amazonaws.com/acp/trivy/client:latest
+  resources:
+    limits:
+      cpu: 1000
+      memory: 1024Mi
   environment:
     IMAGE_NAME: acp-auth-proxy:${DRONE_COMMIT_SHA}
-    WHITELIST: CVE-2021-22555 # remove once there is an update for linux-libc-dev that fixes this CVE
+    IGNORE_UNFIXED: "true"
   when:
     event:
+    - pull_request
     - push
-    branch:
-      exclude:
-      - main
 
 - name: publish-latest
   image: plugins/docker
@@ -68,14 +72,4 @@ services:
   when:
     event:
     - push
-
-- name: anchore-submission-server
-  image: 340268328991.dkr.ecr.eu-west-2.amazonaws.com/acp/anchore-submission:latest
-  commands:
-   - /run.sh server
-  when:
-    event:
-    - push
-    branch:
-      exclude:
-      - main
+    - pull_request
